@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reproductor de Música</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .spinner {
+            animation: spin 3s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #progress-bar {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #4a5568;
+            border-radius: 9999px;
+            cursor: pointer;
+        }
+
+        #progress-bar::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background-color: #4c51bf; /* indigo-700 */
+            border-radius: 50%;
+            border: 2px solid #a0aec0;
+        }
+
+        #progress-bar::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background-color: #4c51bf;
+            border-radius: 50%;
+            border: 2px solid #a0aec0;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-gray-100">
+
+    <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-4xl border border-gray-700 md:flex">
+        <!-- Contenedor del reproductor principal -->
+        <div class="flex flex-col items-center p-4 md:w-1/2 md:p-8">
+            <h1 class="text-3xl font-bold mb-4">Reproductor</h1>
+
+            <!-- Contenedor de la carátula y spinner -->
+            <div class="relative w-48 h-48 mb-6">
+                <div id="album-art-container" class="w-48 h-48 bg-gray-700 rounded-full overflow-hidden shadow-lg border-2 border-gray-600 transition-transform duration-300">
+                    <img id="album-art" src="https://placehold.co/200x200/4a5568/a0aec0?text=M%C3%BAsica" alt="Carátula del álbum" class="w-full h-full object-cover">
+                </div>
+                <div id="spinner" class="absolute inset-0 w-48 h-48 rounded-full border-4 border-t-4 border-gray-600 border-t-white spinner opacity-0 transition-opacity duration-300"></div>
+            </div>
+
+            <!-- Detalles de la canción -->
+            <div class="text-center mb-6 w-full">
+                <h2 id="song-title" class="text-2xl font-semibold truncate">Título de la Canción</h2>
+                <p id="artist-name" class="text-md text-gray-400 truncate">Nombre del Artista</p>
+            </div>
+
+            <!-- Barra de progreso -->
+            <div class="w-full mb-4">
+                <input type="range" id="progress-bar" value="0" min="0" max="100">
+                <div class="flex justify-between text-xs text-gray-400 mt-1">
+                    <span id="current-time">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
+            </div>
+
+            <!-- Controles de la música -->
+            <div class="flex items-center space-x-6">
+                <button id="prev-btn" class="bg-gray-700 p-3 rounded-full hover:bg-gray-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 11.239l3.203-2.222c.307-.213.49-.575.49-.971V8.56c0-.396-.183-.758-.49-.971l-3.203-2.222A.75.75 0 008.5 5.5v9c0 .414.492.626.855.421z" clip-rule="evenodd" fill-rule="evenodd"></path>
+                    </svg>
+                </button>
+                <button id="play-pause-btn" class="bg-indigo-600 p-4 rounded-full shadow-lg hover:bg-indigo-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    <svg id="play-icon" class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.147A.5.5 0 009 7.5v5a.5.5 0 00.555.493l4-2.5a.5.5 0 000-.986l-4-2.5z" clip-rule="evenodd"></path>
+                    </svg>
+                    <svg id="pause-icon" class="w-8 h-8 text-white hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+                <button id="next-btn" class="bg-gray-700 p-3 rounded-full hover:bg-gray-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM10.445 8.761l-3.203-2.222A.75.75 0 006.5 6.5v9c0 .414.492.626.855.421l3.203-2.222a.75.75 0 000-1.282z" clip-rule="evenodd" fill-rule="evenodd"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Elemento de audio -->
+            <audio id="audio-player" class="hidden"></audio>
+        </div>
+
+        <!-- Contenedor de la lista de reproducción -->
+        <div class="flex flex-col p-4 mt-6 md:w-1/2 md:mt-0 md:p-8 md:overflow-y-auto" style="max-height: 500px;">
+            <!-- Sección de la lista de artistas -->
+            <div id="artist-view">
+                <h2 class="text-2xl font-bold mb-4">Artistas</h2>
+                <ul id="artist-list" class="space-y-2 mb-4">
+                    <!-- Los artistas se renderizarán aquí -->
+                </ul>
+                <div class="flex flex-col space-y-4">
+                    <button id="add-music-btn-artist" class="bg-gray-700 text-white p-3 rounded-full hover:bg-gray-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 flex items-center justify-center space-x-2">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg>
+                        <span>Agregar Música Local</span>
+                    </button>
+                    <button id="add-url-btn" class="bg-indigo-600 text-white p-3 rounded-full hover:bg-indigo-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 flex items-center justify-center space-x-2">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a1 1 0 00-1 1v2a1 1 0 001 1h2a1 1 0 100-2h-2V3a1 1 0 00-1-1zM4 14a1 1 0 011-1h2a1 1 0 110 2H5a1 1 0 01-1-1zM2 10a1 1 0 011-1h2a1 1 0 110 2H3a1 1 0 01-1-1zM10 2a1 1 0 011-1h2a1 1 0 110 2h-2a1 1 0 01-1-1zM18 10a1 1 0 01-1 1h-2a1 1 0 110-2h2a1 1 0 011 1zM12 6a1 1 0 100 2h2a1 1 0 100-2h-2zM4 6a1 1 0 00-1 1v2a1 1 0 001 1h2a1 1 0 100-2H4V7a1 1 0 00-1-1zM6 12a1 1 0 00-1 1v2a1 1 0 001 1h2a1 1 0 100-2H6v-2zM12 14a1 1 0 011-1h2a1 1 0 110 2h-2a1 1 0 01-1-1zM16 12a1 1 0 100 2h2a1 1 0 100-2h-2z" clip-rule="evenodd" fill-rule="evenodd"></path></svg>
+                        <span>Agregar Música por URL</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sección de la lista de reproducción por artista -->
+            <div id="playlist-by-artist-view" class="hidden">
+                <div class="flex items-center mb-4">
+                    <button id="back-to-artists-btn" class="bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 mr-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>
+                    </button>
+                    <h2 id="artist-playlist-title" class="text-2xl font-bold"></h2>
+                </div>
+                <ul id="playlist-container" class="space-y-2">
+                    <!-- Las canciones del artista seleccionado se renderizarán aquí -->
+                </ul>
+            </div>
+            
+            <!-- Input de archivo oculto -->
+            <input type="file" id="file-input" accept="audio/*" class="hidden" multiple>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Inicializar Firebase con las variables globales proporcionadas
+        setLogLevel('Debug');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        let userId = null;
+
+        // Autenticar al usuario de forma anónima
+        const authenticate = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+                console.log("Usuario autenticado. ID:", userId);
+                
+                // Cargar la playlist desde Firestore al iniciar
+                loadPlaylistFromFirestore();
+            } catch (error) {
+                console.error("Error de autenticación:", error);
+            }
+        };
+
+        // Llama a la función de autenticación
+        authenticate();
+
+        let songs = [];
+        let filteredSongs = []; // Usaremos esta lista para la vista de artista
+        let currentSongIndex = 0;
+        let isPlaying = false;
+
+        const audioPlayer = document.getElementById('audio-player');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const songTitle = document.getElementById('song-title');
+        const artistName = document.getElementById('artist-name');
+        const albumArt = document.getElementById('album-art');
+        const playIcon = document.getElementById('play-icon');
+        const pauseIcon = document.getElementById('pause-icon');
+        const spinner = document.getElementById('spinner');
+        const progressBar = document.getElementById('progress-bar');
+        const currentTimeEl = document.getElementById('current-time');
+        const durationEl = document.getElementById('duration');
+        const playlistContainer = document.getElementById('playlist-container');
+        const addMusicBtnArtist = document.getElementById('add-music-btn-artist');
+        const addUrlBtn = document.getElementById('add-url-btn');
+        const fileInput = document.getElementById('file-input');
+        const artistView = document.getElementById('artist-view');
+        const artistList = document.getElementById('artist-list');
+        const playlistByArtistView = document.getElementById('playlist-by-artist-view');
+        const backToArtistsBtn = document.getElementById('back-to-artists-btn');
+        const artistPlaylistTitle = document.getElementById('artist-playlist-title');
+
+        // Función para formatear el tiempo
+        const formatTime = (time) => {
+            const minutes = Math.floor(time / 60);
+            const seconds = Math.floor(time % 60);
+            return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        };
+
+        // Función para renderizar la lista de reproducción (o la lista filtrada)
+        const renderPlaylist = (songList, containerId = 'playlist-container') => {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            songList.forEach((song, index) => {
+                const li = document.createElement('li');
+                li.classList.add('flex', 'items-center', 'p-3', 'rounded-lg', 'cursor-pointer', 'hover:bg-gray-700', 'transition-colors', 'duration-200');
+                if (index === currentSongIndex && songList === filteredSongs) {
+                     li.classList.add('bg-indigo-600', 'hover:bg-indigo-600');
+                }
+                li.innerHTML = `
+                    <div class="w-12 h-12 rounded-full overflow-hidden mr-4">
+                        <img src="${song.imageSrc}" alt="Carátula" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold truncate">${song.title}</p>
+                        <p class="text-xs text-gray-400">${song.artist}</p>
+                    </div>
+                `;
+                li.addEventListener('click', () => {
+                    const globalIndex = songs.indexOf(song);
+                    if (globalIndex !== -1) {
+                         currentSongIndex = globalIndex;
+                         loadSong(songs[currentSongIndex]);
+                         audioPlayer.play();
+                         isPlaying = true;
+                         updatePlayPauseButton();
+                    }
+                });
+                container.appendChild(li);
+            });
+        };
+
+        // Función para renderizar la lista de artistas
+        const renderArtists = () => {
+            artistList.innerHTML = '';
+            const uniqueArtists = [...new Set(songs.map(song => song.artist))];
+            uniqueArtists.forEach(artist => {
+                const li = document.createElement('li');
+                li.classList.add('flex', 'items-center', 'p-3', 'rounded-lg', 'cursor-pointer', 'hover:bg-gray-700', 'transition-colors', 'duration-200');
+                li.innerHTML = `
+                    <div class="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center mr-4 text-xl font-bold">
+                        ${artist[0].toUpperCase()}
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold truncate">${artist}</p>
+                        <p class="text-xs text-gray-400">${songs.filter(s => s.artist === artist).length} canciones</p>
+                    </div>
+                `;
+                li.addEventListener('click', () => {
+                    filterByArtist(artist);
+                });
+                artistList.appendChild(li);
+            });
+        };
+
+        // Función para filtrar y mostrar canciones de un artista
+        const filterByArtist = (artist) => {
+            filteredSongs = songs.filter(song => song.artist === artist);
+            artistPlaylistTitle.textContent = artist;
+            renderPlaylist(filteredSongs);
+            artistView.classList.add('hidden');
+            playlistByArtistView.classList.remove('hidden');
+        };
+        
+        // Función para volver a la vista de artistas
+        const showArtistView = () => {
+            playlistByArtistView.classList.add('hidden');
+            artistView.classList.remove('hidden');
+            renderArtists();
+        };
+
+        // Función para actualizar los iconos de play/pause
+        const updatePlayPauseButton = () => {
+            if (isPlaying) {
+                playIcon.classList.add('hidden');
+                pauseIcon.classList.remove('hidden');
+                spinner.classList.remove('opacity-0');
+            } else {
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+                spinner.classList.add('opacity-0');
+            }
+        };
+
+        // Función para cargar una canción
+        const loadSong = (song) => {
+            songTitle.textContent = song.title;
+            artistName.textContent = song.artist;
+            audioPlayer.src = song.audioSrc;
+            albumArt.src = song.imageSrc;
+            renderPlaylist(songs); // Renderiza la lista completa para resaltar la canción actual
+            renderArtists();
+        };
+
+        // Función para alternar entre reproducir y pausar
+        const togglePlayPause = () => {
+            if (isPlaying) {
+                audioPlayer.pause();
+            } else {
+                audioPlayer.play();
+            }
+            isPlaying = !isPlaying;
+            updatePlayPauseButton();
+        };
+
+        // Función para la siguiente canción
+        const nextSong = () => {
+            currentSongIndex = (currentSongIndex + 1) % songs.length;
+            loadSong(songs[currentSongIndex]);
+            audioPlayer.play();
+            isPlaying = true;
+            updatePlayPauseButton();
+        };
+
+        // Función para la canción anterior
+        const prevSong = () => {
+            currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+            loadSong(songs[currentSongIndex]);
+            audioPlayer.play();
+            isPlaying = true;
+            updatePlayPauseButton();
+        };
+
+        // Función para guardar la playlist en Firestore
+        const savePlaylistToFirestore = async () => {
+            if (!userId) {
+                console.error("No se pudo guardar la playlist: Usuario no autenticado.");
+                return;
+            }
+            try {
+                const playlistDocRef = doc(db, 'artifacts', appId, 'users', userId, 'playlists', 'my-playlist');
+                // Guardar solo la lista de canciones en el documento
+                await setDoc(playlistDocRef, { songs: songs });
+                console.log("Playlist guardada con éxito.");
+            } catch (error) {
+                console.error("Error al guardar la playlist:", error);
+            }
+        };
+
+        // Función para cargar la playlist desde Firestore
+        const loadPlaylistFromFirestore = () => {
+            if (!userId) {
+                console.error("No se pudo cargar la playlist: Usuario no autenticado.");
+                return;
+            }
+            const playlistDocRef = doc(db, 'artifacts', appId, 'users', userId, 'playlists', 'my-playlist');
+            onSnapshot(playlistDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data && data.songs) {
+                        songs = data.songs;
+                        console.log("Playlist cargada desde Firestore.");
+                        if (songs.length > 0) {
+                             currentSongIndex = 0;
+                             loadSong(songs[currentSongIndex]);
+                        }
+                    }
+                } else {
+                    console.log("No se encontró playlist en Firestore, usando la playlist por defecto.");
+                    songs = [
+                        {
+                            title: 'Summer Vibes',
+                            artist: 'The Vibe Collective',
+                            audioSrc: 'https://cdn.pixabay.com/download/audio/2023/11/17/audio_f5f6534226.mp3?filename=lofi-chill-158226.mp3',
+                            imageSrc: 'https://cdn.pixabay.com/photo/2021/08/25/20/42/tree-6574345_1280.jpg'
+                        },
+                        {
+                            title: 'Urban Journey',
+                            artist: 'City Beats',
+                            audioSrc: 'https://cdn.pixabay.com/download/audio/2023/07/26/audio_03d9715106.mp3?filename=just-relax-136842.mp3',
+                            imageSrc: 'https://cdn.pixabay.com/photo/2020/08/17/14/09/building-5496464_1280.jpg'
+                        },
+                        {
+                            title: 'Rainy Day',
+                            artist: 'Lofi Soundscape',
+                            audioSrc: 'https://cdn.pixabay.com/download/audio/2023/08/04/audio_349d479354.mp3?filename=its-a-new-life-163450.mp3',
+                            imageSrc: 'https://cdn.pixabay.com/photo/2015/07/02/10/44/rain-828003_1280.jpg'
+                        }
+                    ];
+                    loadSong(songs[currentSongIndex]);
+                }
+            }, (error) => {
+                console.error("Error al cargar la playlist:", error);
+            });
+        };
+
+        // Función para agregar música por URL
+        const addSongFromUrl = () => {
+            // Usamos un modal o un prompt simple para la entrada de datos
+            const url = window.prompt("Ingresa la URL del archivo de música (ej. .mp3):");
+            if (!url) {
+                return; // El usuario canceló
+            }
+            const title = window.prompt("Ingresa el título de la canción:");
+            if (!title) {
+                return; // El usuario canceló
+            }
+            const artist = window.prompt("Ingresa el nombre del artista:");
+            if (!artist) {
+                return; // El usuario canceló
+            }
+
+            const newSong = {
+                title: title,
+                artist: artist,
+                audioSrc: url,
+                imageSrc: "https://placehold.co/200x200/4a5568/a0aec0?text=URL" 
+            };
+            songs.push(newSong);
+            savePlaylistToFirestore();
+            showArtistView();
+        };
+
+        // Escuchadores de eventos
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        nextBtn.addEventListener('click', nextSong);
+        prevBtn.addEventListener('click', prevSong);
+        audioPlayer.addEventListener('ended', nextSong);
+        backToArtistsBtn.addEventListener('click', showArtistView);
+        addUrlBtn.addEventListener('click', addSongFromUrl);
+
+        audioPlayer.addEventListener('timeupdate', () => {
+            const progressPercent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            progressBar.value = progressPercent;
+            currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+        });
+
+        audioPlayer.addEventListener('loadedmetadata', () => {
+            durationEl.textContent = formatTime(audioPlayer.duration);
+        });
+
+        progressBar.addEventListener('input', () => {
+            const seekTime = (progressBar.value / 100) * audioPlayer.duration;
+            audioPlayer.currentTime = seekTime;
+        });
+
+        // Eventos para agregar música local
+        addMusicBtnArtist.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (event) => {
+            const files = event.target.files;
+            if (files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const audioUrl = URL.createObjectURL(file);
+                    
+                    const newSong = {
+                        title: file.name.replace(/\.[^/.]+$/, ""),
+                        artist: "Archivo Local",
+                        audioSrc: audioUrl,
+                        imageSrc: "https://placehold.co/200x200/4a5568/a0aec0?text=Archivo" 
+                    };
+                    songs.push(newSong);
+                }
+                
+                savePlaylistToFirestore();
+                showArtistView(); // Volver a la vista de artistas después de agregar
+            }
+        });
+    </script>
+</body>
+</html>
